@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from 'express';
 const { createServer } = require('node:http');
 const cors = require('cors');
