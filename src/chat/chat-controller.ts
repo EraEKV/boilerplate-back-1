@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import OpenAI from "openai";
+import { chatInstructions } from './chat-instruction';
 
 const openai = new OpenAI();
 const streams = {}; 
@@ -30,12 +31,18 @@ export const handleChatMessage = (socket: any) => {
   socket.on('message', async (messages: MessageData[]) => {
     if (!streams[socket.id]) {
       streams[socket.id] = { active: true, stream: null };
-      console.log('Received message from client: ', messages);
+      // console.log('Received message from client: ', messages);
 
       try {
         const stream = await openai.chat.completions.create({
           model: "gpt-4o-mini",
-          messages: messages,
+          messages: [
+            {
+              role: 'system',
+              content: chatInstructions
+            },
+            ...messages
+          ],
           stream: true,
         });
 
@@ -53,7 +60,6 @@ export const handleChatMessage = (socket: any) => {
 
         delete streams[socket.id];
         socket.emit("stream_finished")
-
       } catch (error) {
         console.error('Error while communicating with OpenAI: ', error);
         socket.emit('error', 'Something went wrong with OpenAI API');
